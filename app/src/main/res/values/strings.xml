@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">GPS Xtra</string>
+    <string name="main_xtra_url">XTRA URL</string>
+    <string name="main_last_run">Last run</string>
+    <string name="main_desc_undo">Undo all url edits</string>
+    <string name="main_desc_save">Save url edit</string>
+    <string name="main_run">Run XTRA Injection</string>
+</resources>
