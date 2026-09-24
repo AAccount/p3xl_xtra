@@ -2,10 +2,8 @@ package dt.gpsxtra.ui
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -17,33 +15,36 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import dt.gpsxtra.R
 import dt.gpsxtra.ui.theme.GPSXtraTheme
+import androidx.compose.runtime.collectAsState
 
+val PADDING = 8.dp
 
 @Composable
-fun MainLayout(xtraUrl: String, lastRan: String, modifier: Modifier = Modifier)
+fun MainLayout(model: MainModel = viewModel())
 {
 	Column(
-		modifier = Modifier.padding(8.dp)
+		modifier = Modifier.padding(PADDING)
 	)
 	{
-		Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically)
+		val modelState = model.uiState.collectAsState()
+		Row(verticalAlignment = Alignment.CenterVertically)
 		{
 			OutlinedTextField(
-				value = xtraUrl,
+				value = modelState.value.xtraUrl,
 				singleLine = true,
 				shape = shapes.medium,
-				modifier = modifier.weight(1f),
+				modifier = Modifier.weight(1f),
 				label = { Text(stringResource(R.string.main_xtra_url)) },
-				onValueChange = { } // TODO: need to update the model to send the change back?
+				onValueChange = { newValue -> model.updateUrl(newValue) } // TODO: need to update the model to send the change back?
 			)
-			IconButton(onClick = {})
+			IconButton(onClick = { model.revertUrl() })
 			{
 				Icon(
 					painter = painterResource(R.drawable.undo),
@@ -51,7 +52,7 @@ fun MainLayout(xtraUrl: String, lastRan: String, modifier: Modifier = Modifier)
 					contentDescription = stringResource(R.string.main_desc_undo)
 				)
 			}
-			IconButton(onClick = {})
+			IconButton(onClick = { model.saveUrl()})
 			{
 				Icon(
 					painter = painterResource(R.drawable.save),
@@ -61,18 +62,19 @@ fun MainLayout(xtraUrl: String, lastRan: String, modifier: Modifier = Modifier)
 			}
 		}
 		Text(
-			text = stringResource(R.string.main_last_run) + " $lastRan",
-			modifier = Modifier.padding(top = 8.dp)
+			text = stringResource(R.string.main_last_run) + " ${modelState.value.lastRun}",
+			modifier = Modifier.padding(top = PADDING)
 		)
 		Button(
 			modifier = Modifier.fillMaxWidth(),
-			onClick = {}
+			enabled = !modelState.value.isRunning,
+			onClick = { model.injectXtra() }
 		)
 		{
 			Text(text = stringResource(R.string.main_run))
 		}
 		TextField(
-			value = "debugging output here",
+			value = modelState.value.debugText,
 			onValueChange = {},
 			readOnly = true,
 			singleLine = false,
@@ -89,8 +91,8 @@ fun MainPreview()
 	GPSXtraTheme()
 	{
 		MainLayout(
-			xtraUrl = "https://xtrapath2.izatcloud.net/xtra3grcej.bin",
-			lastRan = "2026-09-21 18:41:44"
+//			xtraUrl = "https://xtrapath2.izatcloud.net/xtra3grcej.bin",
+//			lastRan = "2026-09-21 18:41:44"
 		)
 	}
 }

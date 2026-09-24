@@ -38,9 +38,9 @@ class MainActivity : ComponentActivity()
 					)
 					{
 						MainLayout(
-							xtraUrl = "https://xtrapath2.izatcloud.net/xtra3grcej.bin",
-							lastRan = "2026-09-21 18:41:44",
-							modifier = Modifier.padding(8.dp)
+//							xtraUrl = "https://xtrapath2.izatcloud.net/xtra3grcej.bin",
+//							lastRan = "2026-09-21 18:41:44",
+//							modifier = Modifier.padding(8.dp)
 						)
 					}
 				}
