@@ -95,7 +95,8 @@ class MainModel(application: Application) : AndroidViewModel(application)
 
 	fun saveUrl()
 	{
-		viewModelScope.launch() {
+		viewModelScope.launch()
+		{
 			val newUrl = _uiState.value.xtraUrl
 			prefsKv.saveXtraUrl(newUrl)
 			_uiState.update { currentState -> currentState.copy(revertUrl = newUrl) }
