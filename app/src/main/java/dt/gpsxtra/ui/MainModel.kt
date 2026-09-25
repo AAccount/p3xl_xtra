@@ -1,10 +1,20 @@
 package dt.gpsxtra.ui
 
 import android.app.Application
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.ServiceConnection
+import android.os.IBinder
+import android.os.RemoteException
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.topjohnwu.superuser.ipc.RootService
 import dt.gpsxtra.DEFAULT_XTRA_URL
+import dt.gpsxtra.ILibLocAPI2Callback
+import dt.gpsxtra.ILibLocAPI2Service
+import dt.gpsxtra.LibLocAPI2Service
 import dt.gpsxtra.PreferencesDataStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -25,7 +35,9 @@ const val TAG = "MainModel"
 class MainModel(application: Application) : AndroidViewModel(application)
 {
 	private val prefsKv = PreferencesDataStore(application.applicationContext)
-	private val debugEvents = MutableSharedFlow<String>(extraBufferCapacity = 64) // neeed the buffer capacity or everything disappears
+	private val debugEvents = MutableSharedFlow<String>(extraBufferCapacity = 64) // need the buffer capacity or everything disappears
+	private var xtraFilePath: String = ""
+	private var libLocAPI2Service : ILibLocAPI2Service? = null
 
 	data class MainState(
 		val xtraUrl: String = DEFAULT_XTRA_URL,
@@ -60,32 +72,9 @@ class MainModel(application: Application) : AndroidViewModel(application)
 		}
 	}
 
-
 	fun appendDebug(newText: String)
 	{
 		debugEvents.tryEmit(newText)
-	}
-
-	fun injectXtra()
-	{
-		updateIsRunning(true)
-		viewModelScope.launch()
-		{
-			val downloadOk = downloadXtra()
-			if(!downloadOk)
-			{
-				appendDebug("Failed to download xtra data")
-				updateIsRunning(false)
-				return@launch
-			}
-
-			appendDebug("Would run C code now")
-		}
-	}
-
-	private fun updateIsRunning(isRunning: Boolean)
-	{
-		_uiState.update() { currentState -> currentState.copy(isRunning = isRunning) }
 	}
 
 	fun updateUrl(newUrl: String)
@@ -108,14 +97,83 @@ class MainModel(application: Application) : AndroidViewModel(application)
 		_uiState.update() { currentState -> currentState.copy(xtraUrl = currentState.revertUrl)}
 	}
 
-	private suspend fun downloadXtra(): Boolean
+	fun injectXtra()
+	{
+		updateIsRunning(true)
+		viewModelScope.launch()
+		{
+			val fileName = "xtra.bin"
+			val target = File(getApplication<Application>().filesDir, fileName)
+			xtraFilePath = target.absolutePath
+			val downloadOk = downloadXtra(target)
+			if(!downloadOk)
+			{
+				appendDebug("Failed to download xtra data")
+				updateIsRunning(false)
+				return@launch
+			}
+
+			appendDebug("Would run C code now")
+			val ctx = getApplication<Application>()
+			val intent = Intent(ctx, LibLocAPI2Service::class.java)
+			RootService.bind(intent, libLocApi2Connection)
+		}
+	}
+
+	private val serviceCallback = object : ILibLocAPI2Callback.Stub()
+	{
+		override fun onDebugMessage(debugMessage: String?)
+		{
+			if(debugMessage != null)
+			{
+				appendDebug(debugMessage)
+			}
+		}
+	}
+
+	private val libLocApi2Connection = object : ServiceConnection
+	{
+		override fun onServiceConnected(name: ComponentName?, service: IBinder?)
+		{
+			libLocAPI2Service = ILibLocAPI2Service.Stub.asInterface(service)
+			try
+			{
+				libLocAPI2Service?.registerCallback(serviceCallback)
+				libLocAPI2Service?.injectWrapper(xtraFilePath)
+			}
+			catch(e: RemoteException)
+			{
+				appendDebug(e.stackTraceToString())
+			}
+			updateIsRunning(false)
+		}
+
+		override fun onServiceDisconnected(name: ComponentName?)
+		{
+			try
+			{
+				libLocAPI2Service?.removeCallback(serviceCallback)
+			}
+			catch(e: RemoteException)
+			{
+				appendDebug(e.stackTraceToString())
+			}
+			libLocAPI2Service = null
+		}
+
+	}
+
+	private fun updateIsRunning(isRunning: Boolean)
+	{
+		_uiState.update() { currentState -> currentState.copy(isRunning = isRunning) }
+	}
+
+	private suspend fun downloadXtra(target: File): Boolean
 	{
 		return withContext(Dispatchers.IO)
 		{
 			val url = _uiState.value.xtraUrl
-			val fileName = "xtra.bin"
-			val target = File(getApplication<Application>().filesDir, fileName)
-			appendDebug("(1) Download xtra from ${url}")
+			appendDebug("Download xtra from ${url} to ${target.absolutePath}")
 
 			try
 			{
