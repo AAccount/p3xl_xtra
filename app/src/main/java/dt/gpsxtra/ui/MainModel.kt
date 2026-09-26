@@ -113,7 +113,6 @@ class MainModel(application: Application) : AndroidViewModel(application)
 				return@launch
 			}
 
-			appendDebug("Would run C code now")
 			val ctx = getApplication<Application>()
 			val intent = Intent(ctx, LibLocAPI2Service::class.java)
 			RootService.bind(intent, libLocApi2Connection)

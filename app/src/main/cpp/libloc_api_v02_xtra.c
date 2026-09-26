@@ -3,8 +3,11 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+#include <android/dlext.h>
 #include <dlfcn.h>
 #include <jni.h>
+#include <android/log.h>
+#include <unistd.h>
 
 #include "KotlinHelpers.h"
 #include "libloc_api_v02_xtra.h"
@@ -17,7 +20,7 @@ static void printingEventCallback(LocClientHandle clientHandle, uint32_t eventId
 	}
 
 	char message[64];
-	snprintf(message, sizeof(message), "event callback got code %d\n", eventId);
+	snprintf(message, sizeof(message), "event callback got code %d", eventId);
 	sendToKotlin((KotlinInfo*)cookie, message);
 }
 
@@ -41,7 +44,7 @@ static void printingResponseCallback(LocClientHandle clientHandle, uint32_t resp
 		snprintf(bigbuffer+offset, BUFFER_SIZE - offset, "%02X ", raw[i]);
 		offset = offset + 3; // 3 from %02X(space): ##_
 	}
-	snprintf(bigbuffer+offset, BUFFER_SIZE - offset, "%s", "]\n");
+	snprintf(bigbuffer+offset, BUFFER_SIZE - offset, "%s", "]");
 	sendToKotlin((KotlinInfo*)cookie, bigbuffer);
 }
 
@@ -53,39 +56,43 @@ static void printingErrorCallback(LocClientHandle LocClientHandle, uint32_t erro
 	}
 
 	char message[64];
-	snprintf(message, sizeof(message), "something bad happened: %d\n", errorId);
+	snprintf(message, sizeof(message), "something bad happened: %d", errorId);
 	sendToKotlin((KotlinInfo*)cookie, message);
 }
 
 JNIEXPORT void JNICALL
 Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrbin_path)
 {
-	jclass counterpart = (*env)->GetObjectClass(env, self);
-	jmethodID debugFromC = (*env)->GetMethodID(env, counterpart, "debugFromC", "(Ljava/lang/String;)V");
+	__android_log_print(ANDROID_LOG_DEBUG, "jni", "uid %d euid %d", getuid(), geteuid());
+	// setup kotlin printing
 	JavaVM* jvm = NULL;
 	(*env)->GetJavaVM(env, &jvm);
 	jobject globalSelf = (*env)->NewGlobalRef(env, self);
+	jclass counterpart = (*env)->GetObjectClass(env, globalSelf);
+	jmethodID debugFromC = (*env)->GetMethodID(env, counterpart, "debugFromC", "(Ljava/lang/String;)V");
 	KotlinInfo* kotlinInfo = malloc(sizeof(KotlinInfo));
 	kotlinInfo->javaVM = jvm;
-	kotlinInfo->globalSelf = self;
+	kotlinInfo->globalSelf = globalSelf;
 	kotlinInfo->methodId = debugFromC;
+
 
 	const char* cpath = (*env)->GetStringUTFChars(env, xtrbin_path, JNI_FALSE);
 
 	if(XTRA_REQ_EXPECTED_SIZE != sizeof(XtraRequest))
 	{
 		char error[64] = {0};
-		snprintf(error, sizeof(error), "XtraRequest is size %d but should be %d\n", sizeof(XtraRequest), XTRA_REQ_EXPECTED_SIZE);
+		snprintf(error, sizeof(error), "XtraRequest is size %d but should be %d", sizeof(XtraRequest), XTRA_REQ_EXPECTED_SIZE);
 		sendToKotlin(kotlinInfo, error);
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
 	}
 
+	// basic checks on the xtra blob
 	FILE* xtraFile = fopen(cpath, "rb");
 	if(xtraFile == NULL)
 	{
-		sendToKotlin(kotlinInfo, "can't open xtra download\n");
+		sendToKotlin(kotlinInfo, "can't open xtra download");
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
@@ -95,18 +102,18 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 	const long xtraSize = ftell(xtraFile);
 	if(xtraSize == -1)
 	{
-		sendToKotlin(kotlinInfo, "can't skip to the end of the file\n");
+		sendToKotlin(kotlinInfo, "can't skip to the end of the file");
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
 	}
 
 	char msgXtraSize[64] = {0};
-	snprintf(msgXtraSize, sizeof(msgXtraSize), "xtra file size %d\n", xtraSize);
+	snprintf(msgXtraSize, sizeof(msgXtraSize), "xtra file size %d", xtraSize);
 	sendToKotlin(kotlinInfo, msgXtraSize);
 	if(xtraSize > XTRA_SIZE_MAX)
 	{
-		sendToKotlin(kotlinInfo, "xtra download over maximum file size uint32\n");
+		sendToKotlin(kotlinInfo, "xtra download over maximum file size uint32");
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
@@ -115,20 +122,23 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 
 	const uint32_t totalParts = (xtraSize + (QMI_LOC_MAX_XTRA_PART_LEN_V02-1)) / QMI_LOC_MAX_XTRA_PART_LEN_V02; // ceiling function
 	char msgTotalParts[64] = {0};
-	snprintf(msgTotalParts, sizeof(msgTotalParts), "total parts: %d\n", totalParts);
+	snprintf(msgTotalParts, sizeof(msgTotalParts), "total parts: %d", totalParts);
 	sendToKotlin(kotlinInfo, msgTotalParts);
 	if(totalParts > UINT16_MAX)
 	{
-		sendToKotlin(kotlinInfo, "total parts more than a uint16 can represent\n");
+		sendToKotlin(kotlinInfo, "total parts more than a uint16 can represent");
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
 	}
 
+	// open the vendor library
 	void* libloc_api_v02 = dlopen("/vendor/lib64/libloc_api_v02.so", RTLD_NOW);
 	if(libloc_api_v02 == NULL)
 	{
-		sendToKotlin(kotlinInfo, "failed to open vendor library\n");
+		const char *err = dlerror();
+		__android_log_print(ANDROID_LOG_ERROR, "TEST","dlopen failed: %s", err ?: "(none)");
+		sendToKotlin(kotlinInfo, "failed to open vendor library");
 		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 		free(kotlinInfo);
 		return;
@@ -138,7 +148,7 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 	LocClientSendReq sendReq = dlsym(libloc_api_v02, "locClientSendReq");
 	LocClientClose closeHandle = dlsym(libloc_api_v02, "locClientClose");
 	char dlsyms[128] = {0};
-	snprintf(dlsyms, sizeof(dlsyms), "openHandle %p, sendHandle %p, closeHandle%p\n", openHandle, sendReq, closeHandle);
+	snprintf(dlsyms, sizeof(dlsyms), "openHandle %p, sendHandle %p, closeHandle%p", openHandle, sendReq, closeHandle);
 	sendToKotlin(kotlinInfo, dlsyms);
 	if(openHandle == 0 || sendReq == 0 || closeHandle == 0)
 	{
@@ -148,26 +158,26 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 		return;
 	}
 
-	LocClientCallbacks callbacks = {
-			sizeof(LocClientCallbacks),
-			printingEventCallback,
-			printingResponseCallback,
-			printingErrorCallback
-	};
-	LocClientHandle handle = NULL;
-	const uint32_t openStatus = openHandle(EVENTS_NONE, &callbacks, &handle, &kotlinInfo);
-	char openStatusMsg[64] = {0};
-	snprintf(openStatusMsg, sizeof(openStatusMsg), "open status %d, loc client handle %p\n", openStatus, handle);
-	sendToKotlin(kotlinInfo, openStatusMsg);
-	if(openStatus != 0 || handle == NULL)
-	{
-		sendToKotlin(kotlinInfo, "failed to open a lib loc client handle\n");
-		fclose(xtraFile);
-		dlclose(libloc_api_v02);
-		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
-		free(kotlinInfo);
-		return;
-	}
+//	LocClientCallbacks callbacks = {
+//			sizeof(LocClientCallbacks),
+//			printingEventCallback,
+//			printingResponseCallback,
+//			printingErrorCallback
+//	};
+//	LocClientHandle handle = NULL;
+//	const uint32_t openStatus = openHandle(EVENTS_NONE, &callbacks, &handle, &kotlinInfo);
+//	char openStatusMsg[64] = {0};
+//	snprintf(openStatusMsg, sizeof(openStatusMsg), "open status %d, loc client handle %p", openStatus, handle);
+//	sendToKotlin(kotlinInfo, openStatusMsg);
+//	if(openStatus != 0 || handle == NULL)
+//	{
+//		sendToKotlin(kotlinInfo, "failed to open a lib loc client handle");
+//		fclose(xtraFile);
+//		dlclose(libloc_api_v02);
+//		(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
+//		free(kotlinInfo);
+//		return;
+//	}
 
 	uint32_t offset = 0;
 	for(int part=1; part<=totalParts; part++)
@@ -185,7 +195,7 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 		if(bytesRead != req.partData_len)
 		{
 			char readError[64] = {0};
-			snprintf(readError, sizeof(readError), "expected to read %d but actually read %d bytes\n", req.partData_len, bytesRead);
+			snprintf(readError, sizeof(readError), "expected to read %d but actually read %d bytes", req.partData_len, bytesRead);
 			sendToKotlin(kotlinInfo, readError);
 			fclose(xtraFile);
 			dlclose(libloc_api_v02);
@@ -195,31 +205,31 @@ Java_dt_gpsxtra_LibLocAPI2Service_inject(JNIEnv* env, jobject self, jstring xtrb
 		}
 
 		char requestInfo[128] = {0};
-		snprintf(requestInfo,sizeof (requestInfo), "XtraRequest{totalSize: %d, totalParts: %d, partNum: %d, partData_len: %d}\n", req.totalSize, req.totalParts, req.partNum, req.partData_len);
+		snprintf(requestInfo,sizeof (requestInfo), "XtraRequest{totalSize: %d, totalParts: %d, partNum: %d, partData_len: %d}", req.totalSize, req.totalParts, req.partNum, req.partData_len);
 		sendToKotlin(kotlinInfo, requestInfo);
-		const uint32_t sendStatus = sendReq(handle, QMI_LOC_INJECT_XTRA_DATA_REQ_V02, &req);
-		if(sendStatus != 0)
-		{
-			char sendFail[64] = {0};
-			snprintf(sendFail, sizeof(sendFail), "expected send return of 0 but got %d\n", sendStatus);
-			sendToKotlin(kotlinInfo, sendFail);
-			fclose(xtraFile);
-			dlclose(libloc_api_v02);
-			(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
-			free(kotlinInfo);
-			return;
-		}
+//		const uint32_t sendStatus = sendReq(handle, QMI_LOC_INJECT_XTRA_DATA_REQ_V02, &req);
+//		if(sendStatus != 0)
+//		{
+//			char sendFail[64] = {0};
+//			snprintf(sendFail, sizeof(sendFail), "expected send return of 0 but got %d", sendStatus);
+//			sendToKotlin(kotlinInfo, sendFail);
+//			fclose(xtraFile);
+//			dlclose(libloc_api_v02);
+//			(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
+//			free(kotlinInfo);
+//			return;
+//		}
 
-		sendToKotlin(kotlinInfo, "successfully sent\n");
+		sendToKotlin(kotlinInfo, "successfully sent");
 		offset = offset + req.partData_len;
 	}
 
-	const uint32_t closeStatus = closeHandle(&handle);
+//	const uint32_t closeStatus = closeHandle(&handle);
 	dlclose(libloc_api_v02);
 	fclose(xtraFile);
-	char closeMsg[64] = {0};
-	snprintf(closeMsg, sizeof(closeMsg), "closed handle exit with %d\n", closeStatus);
-	sendToKotlin(kotlinInfo, closeMsg);
+//	char closeMsg[64] = {0};
+//	snprintf(closeMsg, sizeof(closeMsg), "closed handle exit with %d", closeStatus);
+//	sendToKotlin(kotlinInfo, closeMsg);
 	(*env)->ReleaseStringUTFChars(env, xtrbin_path, cpath);
 	free(kotlinInfo);
 }

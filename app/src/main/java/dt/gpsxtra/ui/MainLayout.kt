@@ -21,7 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import dt.gpsxtra.R
-import dt.gpsxtra.ui.theme.GPSXtraTheme
+//import dt.gpsxtra.ui.theme.GPSXtraTheme
 import androidx.compose.runtime.collectAsState
 
 val PADDING = 8.dp
@@ -42,7 +42,7 @@ fun MainLayout(model: MainModel = viewModel())
 				shape = shapes.medium,
 				modifier = Modifier.weight(1f),
 				label = { Text(stringResource(R.string.main_xtra_url)) },
-				onValueChange = { newValue -> model.updateUrl(newValue) } // TODO: need to update the model to send the change back?
+				onValueChange = { newValue -> model.updateUrl(newValue) }
 			)
 			IconButton(onClick = { model.revertUrl() })
 			{
@@ -78,7 +78,7 @@ fun MainLayout(model: MainModel = viewModel())
 			onValueChange = {},
 			readOnly = true,
 			singleLine = false,
-			placeholder = { Text("sample placeholder")},
+			placeholder = { Text(stringResource(R.string.main_debug_placeholder))},
 			modifier = Modifier.fillMaxWidth().weight(1f)
 		)
 	}
@@ -88,11 +88,10 @@ fun MainLayout(model: MainModel = viewModel())
 @Composable
 fun MainPreview()
 {
-	GPSXtraTheme()
-	{
-		MainLayout(
+
+		MainLayout()
 //			xtraUrl = "https://xtrapath2.izatcloud.net/xtra3grcej.bin",
 //			lastRan = "2026-09-21 18:41:44"
-		)
-	}
+//		)
+
 }

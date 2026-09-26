@@ -14,12 +14,12 @@ class LibLocAPI2Service : RootService()
     }
 	}
 
-	private var mainModelCallback: ILibLocAPI2Callback? = null;
+	private var mainModelCallback: ILibLocAPI2Callback? = null
 	private val binder = object : ILibLocAPI2Service.Stub()
 	{
 		override fun registerCallback(model: ILibLocAPI2Callback?)
 		{
-			mainModelCallback = model;
+			mainModelCallback = model
 		}
 
 		override fun removeCallback(model: ILibLocAPI2Callback?)
@@ -32,15 +32,20 @@ class LibLocAPI2Service : RootService()
 
 		override fun injectWrapper(path: String?)
 		{
-			mainModelCallback?.onDebugMessage("Begin JNI")
+			mainModelCallback?.onDebugMessage("Begin JNI on " + path)
+			if(path != null)
+			{
+				inject(path)
+			}
 			mainModelCallback?.onDebugMessage("Finished JNI")
 		}
 	}
 
-	override fun onBind(intent: Intent): IBinder?
+	override fun onBind(intent: Intent): IBinder
 	{
-		return binder;
+		return binder
 	}
+
 	@Suppress("unused") // it is used from the C side
 	private fun debugFromC(message: String)
 	{

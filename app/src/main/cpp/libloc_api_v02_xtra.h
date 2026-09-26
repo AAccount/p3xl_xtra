@@ -48,4 +48,6 @@ typedef uint32_t (*LocClientOpen)(uint64_t eventMask, LocClientCallbacks* callba
 typedef uint32_t (*LocClientClose)(LocClientHandle* outputHandle);
 typedef uint32_t (*LocClientSendReq)(LocClientHandle handle, uint32_t requestId, XtraRequest* request);
 
+#define LOG_TAG "libloc_api_v02_wrapper"
+
 #endif //GPS_XTRA_LIBLOC_API_V02_XTRA_H
