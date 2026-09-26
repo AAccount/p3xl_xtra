@@ -19,6 +19,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.net.URL
+import java.time.Instant
 
 const val TAG = "MainModel"
 
@@ -76,8 +77,11 @@ class MainModel(application: Application) : AndroidViewModel(application)
 	fun revertUrl()
 	{
 		_uiState.update() { currentState -> currentState.copy(xtraUrl = currentState.revertUrl)}
-		val executableFile = File(getApplication<Application>().codeCacheDir, "xtra-hand-start")
-		Log.d(TAG, "executable ${getApplication<Application>().applicationInfo.nativeLibraryDir}")
+	}
+
+	fun clearDebugOutput()
+	{
+		_uiState.update() { currentState-> currentState.copy(debugText = "") }
 	}
 
 	fun injectXtra()
@@ -118,6 +122,7 @@ class MainModel(application: Application) : AndroidViewModel(application)
 
 	private fun dumpShellResult(header: String, result: Shell.Result)
 	{
+		appendDebug("-----------------------")
 		appendDebug(header)
 		appendDebug("return code ${result.code}")
 		for(line in result.out)
@@ -130,6 +135,13 @@ class MainModel(application: Application) : AndroidViewModel(application)
 	private fun updateIsRunning(isRunning: Boolean)
 	{
 		_uiState.update() { currentState -> currentState.copy(isRunning = isRunning) }
+		if(!isRunning)
+		{
+			viewModelScope.launch()
+			{
+				prefsKv.saveLastRun(Instant.now())
+			}
+		}
 	}
 
 	private suspend fun downloadXtra(target: File): Boolean

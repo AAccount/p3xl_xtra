@@ -34,45 +34,9 @@ fun MainLayout(model: MainModel = viewModel())
 	)
 	{
 		val modelState = model.uiState.collectAsState()
-		Row(verticalAlignment = Alignment.CenterVertically)
-		{
-			OutlinedTextField(
-				value = modelState.value.xtraUrl,
-				singleLine = true,
-				shape = shapes.medium,
-				modifier = Modifier.weight(1f),
-				label = { Text(stringResource(R.string.main_xtra_url)) },
-				onValueChange = { newValue -> model.updateUrl(newValue) }
-			)
-			IconButton(onClick = { model.revertUrl() })
-			{
-				Icon(
-					painter = painterResource(R.drawable.undo),
-					tint = MaterialTheme.colorScheme.primary,
-					contentDescription = stringResource(R.string.main_desc_undo)
-				)
-			}
-			IconButton(onClick = { model.saveUrl()})
-			{
-				Icon(
-					painter = painterResource(R.drawable.save),
-					tint = MaterialTheme.colorScheme.primary,
-					contentDescription = stringResource(R.string.main_desc_save)
-				)
-			}
-		}
-		Text(
-			text = stringResource(R.string.main_last_run) + " ${modelState.value.lastRun}",
-			modifier = Modifier.padding(top = PADDING)
-		)
-		Button(
-			modifier = Modifier.fillMaxWidth(),
-			enabled = !modelState.value.isRunning,
-			onClick = { model.injectXtra() }
-		)
-		{
-			Text(text = stringResource(R.string.main_run))
-		}
+		XtraUrlSetup(model)
+		RunButton(model)
+		RunInformation(model)
 		TextField(
 			value = modelState.value.debugText,
 			onValueChange = {},
@@ -81,6 +45,82 @@ fun MainLayout(model: MainModel = viewModel())
 			placeholder = { Text(stringResource(R.string.main_debug_placeholder))},
 			modifier = Modifier.fillMaxWidth().weight(1f)
 		)
+	}
+}
+
+@Composable
+fun RunInformation(model: MainModel)
+{
+	Row(verticalAlignment = Alignment.CenterVertically)
+	{
+		val modelState = model.uiState.collectAsState()
+		IconButton(onClick = {  })
+		{
+			Icon(
+				painter = painterResource(R.drawable.download),
+				tint = MaterialTheme.colorScheme.primary,
+				contentDescription = stringResource(R.string.main_desc_save)
+			)
+		}
+		Text(
+			text = stringResource(R.string.main_last_run) + " ${modelState.value.lastRun}",
+			modifier = Modifier.padding(top = PADDING).weight(1f)
+		)
+		IconButton(onClick = { model.clearDebugOutput() })
+		{
+			Icon(
+				painter = painterResource(R.drawable.delete),
+				tint = MaterialTheme.colorScheme.primary,
+				contentDescription = stringResource(R.string.main_clear_debug)
+			)
+		}
+	}
+}
+
+@Composable
+fun RunButton(model: MainModel)
+{
+	val modelState = model.uiState.collectAsState()
+	Button(
+		modifier = Modifier.fillMaxWidth(),
+		enabled = !modelState.value.isRunning,
+		onClick = { model.injectXtra() }
+	)
+	{
+		Text(text = stringResource(R.string.main_run))
+	}
+}
+
+@Composable
+fun XtraUrlSetup(model: MainModel)
+{
+	val modelState = model.uiState.collectAsState()
+	Row(verticalAlignment = Alignment.CenterVertically)
+	{
+		OutlinedTextField(
+			value = modelState.value.xtraUrl,
+			singleLine = true,
+			shape = shapes.medium,
+			modifier = Modifier.weight(1f),
+			label = { Text(stringResource(R.string.main_xtra_url)) },
+			onValueChange = { newValue -> model.updateUrl(newValue) }
+		)
+		IconButton(onClick = { model.revertUrl() })
+		{
+			Icon(
+				painter = painterResource(R.drawable.undo),
+				tint = MaterialTheme.colorScheme.primary,
+				contentDescription = stringResource(R.string.main_desc_undo)
+			)
+		}
+		IconButton(onClick = { model.saveUrl()})
+		{
+			Icon(
+				painter = painterResource(R.drawable.save),
+				tint = MaterialTheme.colorScheme.primary,
+				contentDescription = stringResource(R.string.main_desc_save)
+			)
+		}
 	}
 }
 

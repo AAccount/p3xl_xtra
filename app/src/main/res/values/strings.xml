@@ -6,4 +6,6 @@
     <string name="main_desc_save">Save url edit</string>
     <string name="main_run">Run XTRA Injection</string>
     <string name="main_debug_placeholder">Debug text to appear here</string>
+    <string name="main_save_debug">Save debug output</string>
+    <string name="main_clear_debug">Clear debug output</string>
 </resources>
