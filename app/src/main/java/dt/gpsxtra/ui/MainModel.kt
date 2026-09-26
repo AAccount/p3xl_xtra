@@ -1,23 +1,13 @@
 package dt.gpsxtra.ui
 
 import android.app.Application
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.ServiceConnection
-import android.os.IBinder
-import android.os.RemoteException
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.topjohnwu.superuser.ipc.RootService
+import com.topjohnwu.superuser.Shell
 import dt.gpsxtra.DEFAULT_XTRA_URL
-import dt.gpsxtra.ILibLocAPI2Callback
-import dt.gpsxtra.ILibLocAPI2Service
-import dt.gpsxtra.LibLocAPI2Service
 import dt.gpsxtra.PreferencesDataStore
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
@@ -35,9 +25,6 @@ const val TAG = "MainModel"
 class MainModel(application: Application) : AndroidViewModel(application)
 {
 	private val prefsKv = PreferencesDataStore(application.applicationContext)
-	private val debugEvents = MutableSharedFlow<String>(extraBufferCapacity = 64) // need the buffer capacity or everything disappears
-	private var xtraFilePath: String = ""
-	private var libLocAPI2Service : ILibLocAPI2Service? = null
 
 	data class MainState(
 		val xtraUrl: String = DEFAULT_XTRA_URL,
@@ -63,18 +50,12 @@ class MainModel(application: Application) : AndroidViewModel(application)
 					}
 				}
 		}
-		viewModelScope.launch()
-		{
-			debugEvents.collect() { newText ->
-				_uiState.update() { currentState -> currentState.copy(debugText = "${currentState.debugText}${newText}\n") }
-				Log.i(TAG, newText)
-			}
-		}
 	}
 
 	fun appendDebug(newText: String)
 	{
-		debugEvents.tryEmit(newText)
+		_uiState.update() { currentState -> currentState.copy(debugText = "${currentState.debugText}${newText}\n") }
+		Log.i(TAG, newText)
 	}
 
 	fun updateUrl(newUrl: String)
@@ -95,6 +76,8 @@ class MainModel(application: Application) : AndroidViewModel(application)
 	fun revertUrl()
 	{
 		_uiState.update() { currentState -> currentState.copy(xtraUrl = currentState.revertUrl)}
+		val executableFile = File(getApplication<Application>().codeCacheDir, "xtra-hand-start")
+		Log.d(TAG, "executable ${getApplication<Application>().applicationInfo.nativeLibraryDir}")
 	}
 
 	fun injectXtra()
@@ -102,9 +85,8 @@ class MainModel(application: Application) : AndroidViewModel(application)
 		updateIsRunning(true)
 		viewModelScope.launch()
 		{
-			val fileName = "xtra.bin"
+			val fileName = "xtra.blob"
 			val target = File(getApplication<Application>().filesDir, fileName)
-			xtraFilePath = target.absolutePath
 			val downloadOk = downloadXtra(target)
 			if(!downloadOk)
 			{
@@ -113,53 +95,36 @@ class MainModel(application: Application) : AndroidViewModel(application)
 				return@launch
 			}
 
-			val ctx = getApplication<Application>()
-			val intent = Intent(ctx, LibLocAPI2Service::class.java)
-			RootService.bind(intent, libLocApi2Connection)
-		}
-	}
+			val globalNamespaceUseable = "/data/local/tmp/"
+			val copyXtraBlob = "cp -F ${target.absolutePath} ${globalNamespaceUseable}${fileName}"
+			appendDebug(copyXtraBlob)
+			val xtraBlobResult = Shell.cmd(copyXtraBlob).exec()
+			dumpShellResult("copy xtra data blob", xtraBlobResult)
 
-	private val serviceCallback = object : ILibLocAPI2Callback.Stub()
-	{
-		override fun onDebugMessage(debugMessage: String?)
-		{
-			if(debugMessage != null)
-			{
-				appendDebug(debugMessage)
-			}
-		}
-	}
+			val libraries = getApplication<Application>().applicationInfo.nativeLibraryDir
+			val utility = "libxtra-hand-start.so"
+			val copyUtility = "cp -F ${libraries}/${utility} ${globalNamespaceUseable}${utility}"
+			appendDebug(copyUtility)
+			val utilityResult = Shell.cmd(copyUtility).exec()
+			dumpShellResult("copy hand start utility", utilityResult)
 
-	private val libLocApi2Connection = object : ServiceConnection
-	{
-		override fun onServiceConnected(name: ComponentName?, service: IBinder?)
-		{
-			libLocAPI2Service = ILibLocAPI2Service.Stub.asInterface(service)
-			try
-			{
-				libLocAPI2Service?.registerCallback(serviceCallback)
-				libLocAPI2Service?.injectWrapper(xtraFilePath)
-			}
-			catch(e: RemoteException)
-			{
-				appendDebug(e.stackTraceToString())
-			}
+			val runUtility = "${globalNamespaceUseable}${utility}"
+			appendDebug(runUtility)
+			val runResult = Shell.cmd(runUtility).exec()
+			dumpShellResult("hand start result", runResult)
 			updateIsRunning(false)
 		}
+	}
 
-		override fun onServiceDisconnected(name: ComponentName?)
+	private fun dumpShellResult(header: String, result: Shell.Result)
+	{
+		appendDebug(header)
+		appendDebug("return code ${result.code}")
+		for(line in result.out)
 		{
-			try
-			{
-				libLocAPI2Service?.removeCallback(serviceCallback)
-			}
-			catch(e: RemoteException)
-			{
-				appendDebug(e.stackTraceToString())
-			}
-			libLocAPI2Service = null
+			appendDebug(line)
 		}
-
+		appendDebug("-----------------------")
 	}
 
 	private fun updateIsRunning(isRunning: Boolean)

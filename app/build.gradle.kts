@@ -19,10 +19,15 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 			externalNativeBuild {
 				cmake {
-					cppFlags += ""
+					cppFlags += "-g3 -Wall -Wextra"
 				}
 			}
 		}
+	packaging {
+		jniLibs {
+			useLegacyPackaging = true
+		}
+	}
 		buildFeatures {
 			aidl = true
 		}
