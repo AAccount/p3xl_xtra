@@ -102,7 +102,6 @@ long getXtraSize(FILE* xtraDownload)
 int main()
 {
 	assert(XTRA_REQ_EXPECTED_SIZE == sizeof(XtraRequest));
-	printf("!! SIMULATION MODE !!\n");
 
 	const char* path = "/data/local/tmp/xtra.blob";
 	FILE* xtraDownload = openXtraFile(path);
