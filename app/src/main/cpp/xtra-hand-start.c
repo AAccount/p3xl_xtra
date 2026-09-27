@@ -143,14 +143,14 @@ int main()
 	};
 	LocClientHandle handle = NULL;
 	void* cookie = NULL;
-//	const uint32_t openStatus = openHandle(EVENTS_NONE, &callbacks, &handle, cookie);
-//	if(openStatus != 0 && handle == NULL)
-//	{
-//		printf("failed to get a handle %d\n", openStatus);
-//		fclose(xtraDownload);
-//		dlclose(libloc_api_v02);
-//		return 1;
-//	}
+	const uint32_t openStatus = openHandle(EVENTS_NONE, &callbacks, &handle, cookie);
+	if(openStatus != 0 && handle == NULL)
+	{
+		printf("failed to get a handle %d\n", openStatus);
+		fclose(xtraDownload);
+		dlclose(libloc_api_v02);
+		return 1;
+	}
 
 	int offset = 0;
 	for(int part=1; part<=totalParts; part++)
@@ -174,23 +174,23 @@ int main()
 		}
 
 		printf("XtraRequest{totalSize: %d, totalParts: %d, partNum: %d, partData_len: %d}\n", req.totalSize, req.totalParts, req.partNum, req.partData_len);
-//		const uint32_t sendStatus = sendReq(handle, QMI_LOC_INJECT_XTRA_DATA_REQ_V02, &req);
-//		if(sendStatus != 0)
-//		{
-//			printf("expected send return of 0 but got %d\n", sendStatus);
-//			fclose(xtraDownload);
-//			dlclose(libloc_api_v02);
-//			return 1;
-//		}
+		const uint32_t sendStatus = sendReq(handle, QMI_LOC_INJECT_XTRA_DATA_REQ_V02, &req);
+		if(sendStatus != 0)
+		{
+			printf("expected send return of 0 but got %d\n", sendStatus);
+			fclose(xtraDownload);
+			dlclose(libloc_api_v02);
+			return 1;
+		}
 
 		printf("successfully sent\n");
 		offset = offset + req.partData_len;
 	}
 
-//	const uint32_t closeStatus = closeHandle(&handle);
+	const uint32_t closeStatus = closeHandle(&handle);
 	dlclose(libloc_api_v02);
 	fclose(xtraDownload);
-//	printf("closed handle exit with %d\n", closeStatus);
+	printf("closed handle exit with %d\n", closeStatus);
 }
 
 // /home/daniel/Desktop/void/android-ndk-r30/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android35-clang -g -Wall -Wextra xtra-hand-start.c -ldl -o xtra-hand-start

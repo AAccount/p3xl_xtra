@@ -131,7 +131,7 @@ class MainModel(application: Application) : AndroidViewModel(application)
 			dumpShellResult("copy hand start utility", utilityResult)
 
 			val runUtility = "${globalNamespaceUseable}${utility}"
-			appendDebug(runUtility)
+			appendDebug("running " + runUtility)
 			val runResult = Shell.cmd(runUtility).exec()
 			dumpShellResult("hand start result", runResult)
 			updateIsRunning(false)
