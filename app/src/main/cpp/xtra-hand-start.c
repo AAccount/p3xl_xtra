@@ -114,7 +114,7 @@ int main()
         printf("total parts %ld exceeds maximum of %d %d sized chunks\n", totalParts, UINT16_MAX, QMI_LOC_MAX_XTRA_PART_LEN_V02);
         return 1;
     }
-	printf("total parts %d\n", totalParts);
+	printf("total parts %ld\n", totalParts);
 
 	void* libloc_api_v02 = dlopen("/vendor/lib64/libloc_api_v02.so", RTLD_NOW);
 	printf("libloc handle %p\n", libloc_api_v02);
