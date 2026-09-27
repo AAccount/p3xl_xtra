@@ -3,7 +3,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <math.h>
 #include <dlfcn.h>
 
 // Location client handle used to represent a specific client. Negative values are invalid handles.
@@ -18,7 +17,7 @@ typedef struct
 {
 	uint32_t size;
 	EventCallback eventCallback;
-	ResponseCallback resposeCallback;
+	ResponseCallback responseCallback;
 	ErrorCallback errorCallback;
 } LocClientCallbacks;
 
@@ -29,14 +28,16 @@ static void printingEventCallback(LocClientHandle clientHandle, uint32_t eventId
 
 static void printingResponseCallback(LocClientHandle clientHandle, uint32_t responseId, const void* payload, uint32_t payloadSize, void* cookie)
 {
+    flockfile(stdout);
 	printf("response callback got %d of size %d\n", responseId, payloadSize);
-	printf("raw payload: []");
+	printf("raw payload: [");
 	uint8_t* raw = (uint8_t*)payload;
 	for(uint32_t i=0; i<payloadSize; i++)
 	{
 		printf("%02X ", raw[i]);
 	}
 	printf("]\n");
+    funlockfile(stdout);
 }
 
 static void printingErrorCallback(LocClientHandle LocClientHandle, uint32_t errorId, void* cookie)
@@ -80,13 +81,13 @@ FILE* openXtraFile(const char* path)
 	return xtraFile;
 }
 
-uint32_t getXtraSize(FILE* xtraDownload)
+long getXtraSize(FILE* xtraDownload)
 {
 	fseek(xtraDownload, 0, SEEK_END);
 	const long xtraSize = ftell(xtraDownload);
 	if(xtraSize == -1)
 	{
-		perror("can't skip to the end of the file\n");
+		printf("can't skip to the end of the file\n");
 		exit(1);
 	}
 	if(xtraSize > XTRA_SIZE_MAX)
@@ -95,40 +96,53 @@ uint32_t getXtraSize(FILE* xtraDownload)
 		exit(1);
 	}
 	rewind(xtraDownload);
-	return (uint32_t)xtraSize;
+	return xtraSize;
 }
 
 int main()
 {
 	assert(XTRA_REQ_EXPECTED_SIZE == sizeof(XtraRequest));
-	printf("!! SIMULATION MODE !!");
+	printf("!! SIMULATION MODE !!\n");
 
 	const char* path = "/data/local/tmp/xtra.blob";
 	FILE* xtraDownload = openXtraFile(path);
-	const uint32_t xtraSize = getXtraSize(xtraDownload);
-	printf("xtra file size %d\n", xtraSize);
+	const long xtraSize = getXtraSize(xtraDownload);
+	printf("xtra file size %ld\n", xtraSize);
 
-	const uint16_t totalParts = (xtraSize + (QMI_LOC_MAX_XTRA_PART_LEN_V02-1)) / QMI_LOC_MAX_XTRA_PART_LEN_V02; // ceiling function
-	assert(totalParts <= UINT16_MAX);
+	const long totalParts = (xtraSize + (QMI_LOC_MAX_XTRA_PART_LEN_V02-1)) / QMI_LOC_MAX_XTRA_PART_LEN_V02; // ceiling function
+	if(totalParts > UINT16_MAX)
+    {
+        printf("total parts %ld exceeds maximum of %d %d sized chunks\n", totalParts, UINT16_MAX, QMI_LOC_MAX_XTRA_PART_LEN_V02);
+        return 1;
+    }
 	printf("total parts %d\n", totalParts);
 
 	void* libloc_api_v02 = dlopen("/vendor/lib64/libloc_api_v02.so", RTLD_NOW);
 	printf("libloc handle %p\n", libloc_api_v02);
-	assert(libloc_api_v02 != 0);
+	if(libloc_api_v02 == NULL)
+    {
+        printf("failed to open libloc_api_v02\n");
+        return 1;
+    }
 
 	LocClientOpen openHandle = dlsym(libloc_api_v02, "locClientOpen");
 	LocClientSendReq sendReq = dlsym(libloc_api_v02, "locClientSendReq");
 	LocClientClose closeHandle = dlsym(libloc_api_v02, "locClientClose");
-	assert(openHandle != 0 && sendReq !=0 && closeHandle != 0);
+    printf("open handle %p send request handle %p close handle %p\n", openHandle, sendReq, closeHandle);
+	if(openHandle == 0 || sendReq == 0 || closeHandle == 0)
+    {
+        printf("failed to find one of the 3 functions\n");
+        return 1;
+    }
 
-//	LocClientCallbacks callbacks = {
-//			sizeof(LocClientCallbacks),
-//			printingEventCallback,
-//			printingResponseCallback,
-//			printingErrorCallback
-//	};
-//	LocClientHandle handle = NULL;
-//	void* cookie = NULL;
+	LocClientCallbacks callbacks = {
+			sizeof(LocClientCallbacks),
+			printingEventCallback,
+			printingResponseCallback,
+			printingErrorCallback
+	};
+	LocClientHandle handle = NULL;
+	void* cookie = NULL;
 //	const uint32_t openStatus = openHandle(EVENTS_NONE, &callbacks, &handle, cookie);
 //	if(openStatus != 0 && handle == NULL)
 //	{
@@ -141,18 +155,19 @@ int main()
 	int offset = 0;
 	for(int part=1; part<=totalParts; part++)
 	{
+        const long remainder = xtraSize - offset;
 		XtraRequest req;
 		memset(req.partData, 0, QMI_LOC_MAX_XTRA_PART_LEN_V02 + sizeof(req.formatType_valid) + sizeof(req.padding));
 		req.totalSize = xtraSize;
 		req.totalParts = totalParts;
 		req.partNum = part;
-		req.partData_len = fmin(QMI_LOC_MAX_XTRA_PART_LEN_V02, xtraSize - offset);
-		const uint32_t bytesRead = fread(req.partData, 1, req.partData_len, xtraDownload); // for binary files use unit size = 1, legnth = actual length to get an accurate bytes read
+		req.partData_len = QMI_LOC_MAX_XTRA_PART_LEN_V02 < remainder ? QMI_LOC_MAX_XTRA_PART_LEN_V02 : remainder;
+		const size_t bytesRead = fread(req.partData, 1, req.partData_len, xtraDownload); // for binary files use unit size = 1, length = actual length to get an accurate bytes read
 		req.formatType_valid = 1;
 		req.formatType = eQMI_LOC_XTRA_DATA_V02;
 		if(bytesRead != req.partData_len)
 		{
-			printf("expected to read %d but actually read %d bytes\n", req.partData_len, bytesRead);
+			printf("expected to read %d but actually read %zu bytes\n", req.partData_len, bytesRead);
 			fclose(xtraDownload);
 			dlclose(libloc_api_v02);
 			return 1;
