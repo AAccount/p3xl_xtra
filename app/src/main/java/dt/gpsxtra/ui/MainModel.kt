@@ -1,12 +1,16 @@
 package dt.gpsxtra.ui
 
 import android.app.Application
+import android.content.ContentResolver
+import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.topjohnwu.superuser.Shell
 import dt.gpsxtra.DEFAULT_XTRA_URL
 import dt.gpsxtra.PreferencesDataStore
+import dt.gpsxtra.formatTimestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,10 +22,12 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 
 const val TAG = "MainModel"
+const val SAVE_DEBUG = 1
 
 class MainModel(application: Application) : AndroidViewModel(application)
 {
@@ -82,6 +88,18 @@ class MainModel(application: Application) : AndroidViewModel(application)
 	fun clearDebugOutput()
 	{
 		_uiState.update() { currentState-> currentState.copy(debugText = "") }
+	}
+
+	fun saveDebugOutput(contentResolver: ContentResolver, uri: Uri)
+	{
+		try
+		{
+			contentResolver.openOutputStream(uri)?.use(){outputStream -> outputStream.write(_uiState.value.debugText.toByteArray())}
+		}
+		catch(e: Exception)
+		{
+			appendDebug(e.stackTraceToString())
+		}
 	}
 
 	fun injectXtra()

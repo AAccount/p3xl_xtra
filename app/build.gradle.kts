@@ -22,6 +22,9 @@ android {
 					cppFlags += "-g3 -Wall -Wextra"
 				}
 			}
+			ndk {
+				abiFilters.addAll(setOf("armeabi-v7a", "arm64-v8a"))
+			}
 		}
 	packaging {
 		jniLibs {

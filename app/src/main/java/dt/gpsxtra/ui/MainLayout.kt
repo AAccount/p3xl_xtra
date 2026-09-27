@@ -1,5 +1,9 @@
 package dt.gpsxtra.ui
 
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -7,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MaterialTheme.shapes
 import androidx.compose.material3.OutlinedTextField
@@ -23,6 +28,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import dt.gpsxtra.R
 //import dt.gpsxtra.ui.theme.GPSXtraTheme
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.platform.LocalContext
+import dt.gpsxtra.formatTimestamp
+import java.time.Instant
 
 val PADDING = 8.dp
 
@@ -51,14 +59,24 @@ fun MainLayout(model: MainModel = viewModel())
 @Composable
 fun RunInformation(model: MainModel)
 {
+	val modelState = model.uiState.collectAsState()
+	val hasDebugText = modelState.value.debugText.isNotEmpty()
+	val ctx = LocalContext.current
+	val saveFileLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.CreateDocument("text/plain"))
+	{
+		uri: Uri? -> uri?.let() { saveFile -> model.saveDebugOutput(ctx.contentResolver, saveFile) }
+	}
+
 	Row(verticalAlignment = Alignment.CenterVertically)
 	{
-		val modelState = model.uiState.collectAsState()
-		IconButton(onClick = {  })
+		IconButton(
+			onClick = { saveFileLauncher.launch("p3xl-xtra-${formatTimestamp(Instant.now())}.txt") },
+			enabled = hasDebugText,
+		)
 		{
 			Icon(
 				painter = painterResource(R.drawable.download),
-				tint = MaterialTheme.colorScheme.primary,
+				tint = if(hasDebugText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
 				contentDescription = stringResource(R.string.main_desc_save)
 			)
 		}
@@ -66,11 +84,11 @@ fun RunInformation(model: MainModel)
 			text = stringResource(R.string.main_last_run) + " ${modelState.value.lastRun}",
 			modifier = Modifier.padding(top = PADDING).weight(1f)
 		)
-		IconButton(onClick = { model.clearDebugOutput() })
+		IconButton(onClick = { model.clearDebugOutput() }, enabled = modelState.value.debugText.isNotEmpty())
 		{
 			Icon(
 				painter = painterResource(R.drawable.delete),
-				tint = MaterialTheme.colorScheme.primary,
+				tint = if(hasDebugText) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f),
 				contentDescription = stringResource(R.string.main_clear_debug)
 			)
 		}

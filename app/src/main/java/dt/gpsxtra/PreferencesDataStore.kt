@@ -38,8 +38,7 @@ class PreferencesDataStore(private val context: Context)
 	{
 		return context.dataStore.data.map { prefs ->
 			val ts = Instant.ofEpochMilli(prefs[KEY_LAST_RUN] ?:  1789953812000) // when this function was fast written
-			val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS").withZone(ZoneId.systemDefault())
-			formatter.format(ts)
+			return@map formatTimestamp(ts)
 		}
 	}
 
