@@ -95,3 +95,228 @@ After some googling the least worst option was to keep the C as its own executab
 This has its own problems of the standard cmake producing libraries, not executables. Not really having an interest in cmake administrative work, I let Gemini wizard that one.
 
 Every single command that is run as root is printed to the debug text box so you can see what it is doing. You can also save the debug output and clear it.
+
+## "Field Test" exported debug output
+Saved the actual test run logs before the sat stat screenshot.
+```text
+Download xtra from https://xtrapath2.izatcloud.net/xtra3grcej.bin to /data/user/0/dt.gpsxtra/files/xtra.blob
+cp -F /data/user/0/dt.gpsxtra/files/xtra.blob /data/local/tmp/xtra.blob
+-----------------------
+copy xtra data blob
+return code 0
+-----------------------
+cp -F /data/app/~~3UpPyazQZHA1SU0Y9xUzjQ==/dt.gpsxtra-jUcS1zH-ZAV3GKr5lZLSpQ==/lib/arm64/libxtra-hand-start.so /data/local/tmp/libxtra-hand-start.so
+-----------------------
+copy hand start utility
+return code 0
+-----------------------
+running /data/local/tmp/libxtra-hand-start.so
+-----------------------
+hand start result
+return code 0
+!! SIMULATION MODE !!
+xtra file size 50981
+total parts 50
+libloc handle 0x503a1c29b137d361
+open handle 0x71c5db04d0 send request handle 0x71c5daf65c close handle 0x71c5db0280
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 1, partData_len: 1024}
+successfully sent
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 2, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 3, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 4, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 5, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 6, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 06 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 7, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 8, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 07 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 9, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 10, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 09 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 11, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 12, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 13, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 14, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 15, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 16, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 0F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 17, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 18, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 11 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 19, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 12 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 20, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 13 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 14 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 21, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 22, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 15 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 23, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 24, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 17 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 18 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 25, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 26, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 19 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 27, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 28, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 29, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 30, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 31, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 32, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 1F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 33, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 21 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 34, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 22 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 35, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 23 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 36, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 37, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 24 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 25 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 38, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 26 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 39, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 40, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 27 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 41, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 42, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 29 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2A 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 43, partData_len: 1024}
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 44, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2B 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 45, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 46, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2D 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 47, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2E 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 48, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 2F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 49, partData_len: 1024}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 30 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+XtraRequest{totalSize: 50981, totalParts: 50, partNum: 50, partData_len: 805}
+response callback got 167 of size 24
+raw payload: [00 00 00 00 01 00 31 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 ]
+successfully sent
+closed handle exit with 0
+-----------------------
+```
