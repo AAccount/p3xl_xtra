@@ -13,8 +13,8 @@ android {
         applicationId = "dt.gpsxtra"
         minSdk = 31
         targetSdk = 37
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 100000 //XYYZZZ X.Y.Z
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 			externalNativeBuild {
